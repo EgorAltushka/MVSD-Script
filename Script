@@ -9,7 +9,6 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Camera = Workspace.CurrentCamera
 
--- ==================== ЛОКАЛИЗАЦИЯ ====================
 local Translations = {
     RU = {
         TabVisuals = "Визуал",
@@ -117,7 +116,6 @@ local function RegisterText(element, key)
     table.insert(UI_Strings, {obj = element, key = key})
 end
 
--- ==================== НАСТРОЙКИ ====================
 local function main()
 
 _G.PidorasSettings = {
@@ -370,7 +368,6 @@ local function CreateSlider(parent, textKey, yPos, minVal, maxVal, defaultVal, c
     return Frame
 end
 
--- ==================== VISUALS TAB ====================
 local ScrollingFrame = Instance.new("ScrollingFrame")
 ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
 ScrollingFrame.BackgroundTransparency = 1
@@ -438,7 +435,6 @@ CreateToggleRow(ScrollingFrame, "NameESP", 38, false, function(state)
     end
 end)
 
--- ==================== COMBAT TAB ====================
 local CombatContent = Instance.new("ScrollingFrame")
 CombatContent.Size = UDim2.new(1, 0, 1, 0)
 CombatContent.BackgroundTransparency = 1
@@ -509,7 +505,6 @@ UI_Combat.HitboxSlider = CreateSlider(CombatContent, "HitboxSize", 191, 2, 20, 5
     _G.PidorasSettings.HitboxSize = val
 end)
 
--- ==================== MOVEMENT TAB ====================
 local MovementContent = Instance.new("ScrollingFrame")
 MovementContent.Size = UDim2.new(1, 0, 1, 0)
 MovementContent.BackgroundTransparency = 1
@@ -541,7 +536,6 @@ CreateSlider(MovementContent, "SpinSpeed", 188, 10, 1000, 100, function(val)
     _G.PidorasSettings.SpinSpeed = val
 end)
 
--- ==================== MISC TAB ====================
 local MiscContent = Instance.new("ScrollingFrame")
 MiscContent.Size = UDim2.new(1, 0, 1, 0)
 MiscContent.BackgroundTransparency = 1
@@ -584,7 +578,6 @@ CreateToggleRow(MiscContent, "Invisible", 25, false, function(state)
     end
 end)
 
--- ==================== LANGUAGE TAB ====================
 local LangContent = Instance.new("Frame")
 LangContent.Size = UDim2.new(1, 0, 1, 0)
 LangContent.BackgroundTransparency = 1
@@ -601,7 +594,6 @@ local btnEN, setEN = CreateToggleRow(LangContent, "LangEN", 58, false, function(
     if state then CurrentLang = "EN"; UpdateLanguage(); setRU(false); setEN(true) end
 end)
 
--- ==================== INFO TAB ====================
 local InfoContent = Instance.new("Frame")
 InfoContent.Size = UDim2.new(1, 0, 1, 0)
 InfoContent.BackgroundTransparency = 1
@@ -655,7 +647,6 @@ CopyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== WATERMARK ====================
 local Watermark = Instance.new("TextLabel")
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 0, 75) 
@@ -677,7 +668,6 @@ task.spawn(function()
     end
 end)
 
--- ==================== ОБНОВЛЕНИЕ ЯЗЫКА ====================
 function UpdateLanguage()
     for _, item in ipairs(UI_Strings) do
         if item.obj and item.obj.Parent then
@@ -768,7 +758,6 @@ TabMisc.MouseButton1Click:Connect(function() SwitchTab(TabMisc, MiscContent) end
 TabLang.MouseButton1Click:Connect(function() SwitchTab(TabLang, LangContent) end)
 TabInfo.MouseButton1Click:Connect(function() SwitchTab(TabInfo, InfoContent) end)
 
--- ==================== ESP FUNCTIONS ====================
 function ClearChams()
     for p, hl in pairs(activeChams) do if hl then hl:Destroy() end activeChams[p] = nil end
 end
@@ -865,7 +854,6 @@ function StartNameESP()
     end)
 end
 
--- ==================== HITBOX FUNCTIONS ====================
 function ClearHitboxes()
     for part, oldSize in pairs(originalHitboxSizes) do
         if part and part.Parent then
@@ -937,7 +925,6 @@ function StartHitbox()
     end)
 end
 
--- ==================== MOVEMENT & BHOP & SPIN FUNCTIONS ====================
 task.spawn(function()
     while ScreenGui.Parent do
         local char = LocalPlayer.Character
@@ -1026,7 +1013,6 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
--- ==================== AUTO-SHOOT ====================
 task.spawn(function()
     while ScreenGui.Parent do
         if _G.PidorasSettings.AutoShootEnabled or _G.PidorasSettings.AutoWinEnabled then
@@ -1061,7 +1047,6 @@ task.spawn(function()
     end
 end)
 
--- ==================== MISC BUTTONS ====================
 MinimizeBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     Watermark.Visible = true
