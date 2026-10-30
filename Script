@@ -105,8 +105,8 @@ local Translations = {
 }
 
 local CurrentLang = "RU"
-local UI_Strings = {} -- Хранилище всех текстовых элементов для перевода
-local UI_Sliders = {} -- Хранилище ползунков (чтобы обновлять текст при смене языка)
+local UI_Strings = {}
+local UI_Sliders = {}
 
 local function GetTranslated(key)
     return Translations[CurrentLang][key] or key
@@ -162,7 +162,6 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = PlayerGui
 
--- UI Меню
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 420, 0, 320)
 MainFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
@@ -679,13 +678,11 @@ function UpdateLanguage()
             slider.label.Text = GetTranslated(slider.key) .. ": " .. slider.value
         end
     end
-    -- Спец-обработка для кнопки копирования в Info (если она была нажата)
     if CopyBtn.BackgroundColor3 == Color3.fromRGB(0, 150, 0) then
         CopyBtn.Text = GetTranslated("TgCopied")
     end
 end
 
--- Перетаскивание Главного Меню
 local dragging, dragStart, startPos = false, nil, nil
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -704,7 +701,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Перетаскивание и клик Watermark
 local wmDragging, wmDragStart, wmStartPos = false, nil, nil
 local wmMoved = false
 
@@ -938,36 +934,69 @@ task.spawn(function()
     end
 end)
 
--- Функция поиска цели для авто-стрельбы
+local function IsTeammate(plr)
+    if plr == LocalPlayer then return true end
+    
+    if LocalPlayer.Team ~= nil and plr.Team ~= nil then
+        if LocalPlayer.Team == plr.Team then return true end
+    end
+    
+    if LocalPlayer.TeamColor ~= nil and plr.TeamColor ~= nil then
+        if LocalPlayer.TeamColor == plr.TeamColor then return true end
+    end
+    
+    local myTeamAttr = LocalPlayer:GetAttribute("Team")
+    local plrTeamAttr = plr:GetAttribute("Team")
+    if myTeamAttr ~= nil and plrTeamAttr ~= nil then
+        if myTeamAttr == plrTeamAttr then return true end
+    end
+    
+    local myTeamStr = LocalPlayer:GetAttribute("team")
+    local plrTeamStr = plr:GetAttribute("team")
+    if myTeamStr ~= nil and plrTeamStr ~= nil then
+        if myTeamStr == plrTeamStr then return true end
+    end
+    
+    return false
+end
+
 local function GetClosestTarget()
     local closestTarget = nil
-    local shortestDist = math.huge
+    local shortestScreenDist = math.huge
     local camPos = Camera.CFrame.Position
+    local viewportCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     local maxDist = 10000
 
     for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and plr.Character then
-            if not (LocalPlayer.Team and plr.Team == LocalPlayer.Team) then
-                local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-                local hum = plr.Character:FindFirstChildOfClass("Humanoid")
-                
-                if hrp and hum and hum.Health > 0 then
-                    local dist = (camPos - hrp.Position).Magnitude
-                    if dist < maxDist and dist < shortestDist then
+        if not IsTeammate(plr) and plr.Character then
+            local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            
+            if hrp and hum and hum.Health > 0 then
+                local dist3D = (camPos - hrp.Position).Magnitude
+                if dist3D < maxDist then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                    if onScreen and screenPos.Z > 0 then
+                        local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - viewportCenter).Magnitude
+                        
                         if _G.PidorasSettings.AutoWinEnabled then
-                            shortestDist = dist
-                            closestTarget = hrp
+                            if screenDist < shortestScreenDist then
+                                shortestScreenDist = screenDist
+                                closestTarget = hrp
+                            end
                         else
                             local rayParams = RaycastParams.new()
                             rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
                             rayParams.FilterType = Enum.RaycastFilterType.Exclude
                             
-                            local direction = (hrp.Position - camPos).Unit * dist
+                            local direction = (hrp.Position - camPos).Unit * dist3D
                             local rayResult = Workspace:Raycast(camPos, direction, rayParams)
                             
                             if not rayResult or rayResult.Instance:IsDescendantOf(plr.Character) then
-                                shortestDist = dist
-                                closestTarget = hrp
+                                if screenDist < shortestScreenDist then
+                                    shortestScreenDist = screenDist
+                                    closestTarget = hrp
+                                end
                             end
                         end
                     end
@@ -978,7 +1007,6 @@ local function GetClosestTarget()
     return closestTarget
 end
 
--- Bhop & Spin
 RunService.RenderStepped:Connect(function(dt)
     local char = LocalPlayer.Character
     if char then
@@ -989,12 +1017,10 @@ RunService.RenderStepped:Connect(function(dt)
             hum.AutoRotate = not _G.PidorasSettings.SpinEnabled
         end
 
-        -- Spin
         if hrp and _G.PidorasSettings.SpinEnabled then
             hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(_G.PidorasSettings.SpinSpeed) * dt, 0)
         end
 
-        -- Bhop
         if _G.PidorasSettings.BhopEnabled and hum then
             if hum:GetState() == Enum.HumanoidStateType.Running or hum:GetState() == Enum.HumanoidStateType.Landed then
                 if hum.FloorMaterial ~= Enum.Material.Air then
